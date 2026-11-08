@@ -50,6 +50,7 @@ private fun SettingsContent(
                 )
             }
             behaviourSection(settings = settings, actions = actions)
+            appearanceSection(settings = settings, actions = actions)
         }
     }
 }

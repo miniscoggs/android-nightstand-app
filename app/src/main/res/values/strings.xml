@@ -17,4 +17,32 @@
     </plurals>
     <string name="settings_require_landscape_title">Require landscape</string>
     <string name="settings_require_landscape_summary">Only respond to taps while the phone rests on a long edge</string>
+    <string name="settings_appearance_header">Appearance</string>
+    <string name="settings_hour_format_title">Clock format</string>
+    <string name="settings_hour_format_system">System</string>
+    <string name="settings_hour_format_12">12h</string>
+    <string name="settings_hour_format_24">24h</string>
+    <string name="settings_clock_font_title">Clock font</string>
+    <string name="settings_clock_font_sample" translatable="false">12:34</string>
+    <string name="settings_clock_font_system">System</string>
+    <string name="settings_clock_font_digital">Digital</string>
+    <string name="settings_clock_font_bubble">Bubble</string>
+    <string name="settings_text_color_title">Text colour</string>
+    <string name="settings_text_color_white">White</string>
+    <string name="settings_text_color_warm">Warm white</string>
+    <string name="settings_text_color_red">Red</string>
+    <string name="settings_text_color_amber">Amber</string>
+    <string name="settings_text_color_green">Green</string>
+    <string name="settings_text_color_cyan">Cyan</string>
+    <string name="settings_background_color_title">Background</string>
+    <string name="settings_background_color_off">True black (pixels off)</string>
+    <string name="settings_background_color_dark_grey">Dark grey</string>
+    <string name="settings_background_color_midnight_blue">Midnight blue</string>
+    <string name="settings_background_color_deep_red">Deep red</string>
+    <string name="settings_clock_brightness_title">Clock brightness</string>
+    <string name="settings_clock_brightness_value">%1$d%%</string>
+    <string name="settings_show_date_title">Show date</string>
+    <string name="settings_show_date_summary">Show a small date line under the clock</string>
+    <string name="settings_burn_in_shift_title">Burn-in protection</string>
+    <string name="settings_burn_in_shift_summary">Move the clock slightly each minute to protect the screen</string>
 </resources>
