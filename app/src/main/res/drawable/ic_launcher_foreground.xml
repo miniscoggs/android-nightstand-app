@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- crescent: a radius-20 disc at the centre minus an offset radius-18 disc, inside the 66dp safe zone -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M47.75,35A20,20 0,1 0,73 60.25A18,18 0,0 1,47.75 35Z" />
+</vector>
