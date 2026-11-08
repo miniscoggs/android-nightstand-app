@@ -30,8 +30,12 @@ $logPath = Join-Path $runsDir ("{0}-{1}-verify.log" -f (Get-Date -Format 'yyyyMM
 "PLAN_STEP=$planStep stop_hook_active=$stopHookActive" | Out-File -Encoding UTF8 -FilePath $logPath
 
 $verifyScript = Join-Path $repoRoot 'scripts\verify.ps1'
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $verifyScript *>> $logPath
+$ErrorActionPreference = 'Continue' # under Stop, 5.1 throws on the first native stderr line merged by 2>&1
+# Piped through Out-File so the log stays UTF-8: 5.1's >> appends UTF-16 and garbles the tail sent back.
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $verifyScript 2>&1 |
+    ForEach-Object { [string]$_ } | Out-File -Append -Encoding UTF8 -FilePath $logPath
 $verifyExit = $LASTEXITCODE
+$ErrorActionPreference = 'Stop'
 
 if (Test-StopAllowed -PlanContent $planContent -PlanStep $planStep -VerifyResult $verifyExit) {
     exit 0
