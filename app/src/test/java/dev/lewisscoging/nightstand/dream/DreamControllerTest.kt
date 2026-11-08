@@ -8,6 +8,7 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -24,8 +25,11 @@ class DreamControllerTest {
     private class Fixture(
         testScope: TestScope,
         initialSettings: NightstandSettings,
-        systemIs24Hour: Boolean
+        systemIs24Hour: Boolean,
+        initialOrientation: Boolean
     ) {
+        val orientation = MutableStateFlow(initialOrientation)
+        var orientationSubscriptions = 0
         val settings = MutableStateFlow(initialSettings)
         val visibilityChanges = mutableListOf<Pair<Long, Boolean>>()
         var nowCalls = 0
@@ -40,7 +44,8 @@ class DreamControllerTest {
                 )
             },
             systemIs24Hour = { systemIs24Hour },
-            datePattern = { TEST_DATE_PATTERN }
+            datePattern = { TEST_DATE_PATTERN },
+            orientation = orientation.onStart { orientationSubscriptions++ }
         )
 
         init {
@@ -58,24 +63,22 @@ class DreamControllerTest {
     }
 
     private fun TestScope.fixture(
-        timeoutSeconds: Int = 15,
-        hourFormat: HourFormat = HourFormat.H24,
-        showDate: Boolean = false,
-        systemIs24Hour: Boolean = true
-    ) = Fixture(
-        this,
-        NightstandSettings(
-            clockTimeoutSeconds = timeoutSeconds,
-            use24Hour = hourFormat,
-            showDate = showDate
-        ),
-        systemIs24Hour
-    )
+        settings: NightstandSettings = NightstandSettings(),
+        systemIs24Hour: Boolean = true,
+        orientationOk: Boolean = true
+    ) = Fixture(this, settings, systemIs24Hour, orientationOk)
 
     private fun timeTextAt(hourFormat: HourFormat, systemIs24Hour: Boolean): String {
         var timeText = ""
         runTest {
-            val fixture = fixture(hourFormat = hourFormat, systemIs24Hour = systemIs24Hour)
+            val fixture = fixture(
+                NightstandSettings(
+                    use24Hour = hourFormat,
+                    startTime = ALWAYS_ON_MINUTES,
+                    endTime = ALWAYS_ON_MINUTES
+                ),
+                systemIs24Hour = systemIs24Hour
+            )
             advanceTimeBy(THIRTEEN_OH_FIVE_MILLIS)
             fixture.controller.onTap()
             timeText = fixture.controller.uiState.value.timeText
@@ -149,11 +152,11 @@ class DreamControllerTest {
     }
 
     @Test
-    fun nowIsNeverReadWhileHidden() = runTest {
+    fun hiddenClockReadsNowOnlyForTheMinuteWindowCheck() = runTest {
         val fixture = fixture()
         advanceTimeBy(60_000)
         runCurrent()
-        assertEquals(0, fixture.nowCalls)
+        assertEquals(2, fixture.nowCalls)
         fixture.controller.onTap()
         advanceTimeBy(15_000)
         runCurrent()
@@ -162,7 +165,7 @@ class DreamControllerTest {
         assertTrue(callsWhenHidden > 1)
         advanceTimeBy(3_600_000)
         runCurrent()
-        assertEquals(callsWhenHidden, fixture.nowCalls)
+        assertEquals(callsWhenHidden + 60, fixture.nowCalls)
     }
 
     @Test
@@ -206,17 +209,17 @@ class DreamControllerTest {
 
     @Test
     fun dateAppearsOnlyWhenShowDateIsOn() = runTest {
-        val withDate = fixture(showDate = true)
+        val withDate = fixture(NightstandSettings(showDate = true))
         withDate.controller.onTap()
         assertEquals("1970-01-01", withDate.controller.uiState.value.dateText)
-        val withoutDate = fixture(showDate = false)
+        val withoutDate = fixture(NightstandSettings(showDate = false))
         withoutDate.controller.onTap()
         assertNull(withoutDate.controller.uiState.value.dateText)
     }
 
     @Test
     fun turningShowDateOffClearsTheDateOnTheNextTick() = runTest {
-        val fixture = fixture(showDate = true)
+        val fixture = fixture(NightstandSettings(showDate = true))
         fixture.controller.onTap()
         fixture.settings.value = fixture.settings.value.copy(showDate = false)
         advanceTimeBy(1_000)
@@ -232,8 +235,89 @@ class DreamControllerTest {
         assertEquals("1:05", timeTextAt(HourFormat.SYSTEM, systemIs24Hour = false))
     }
 
+    @Test
+    fun masterToggleOffAloneDisablesTaps() = runTest {
+        val fixture = fixture(NightstandSettings(enabled = false))
+        fixture.controller.onTap()
+        assertFalse(fixture.controller.tapsAllowed.value)
+        assertFalse(fixture.controller.uiState.value.clockVisible)
+    }
+
+    @Test
+    fun timeWindowAloneDisablesTaps() = runTest {
+        val fixture =
+            fixture(NightstandSettings(startTime = ONE_AM_MINUTES, endTime = TWO_AM_MINUTES))
+        fixture.controller.onTap()
+        assertFalse(fixture.controller.tapsAllowed.value)
+        assertFalse(fixture.controller.uiState.value.clockVisible)
+    }
+
+    @Test
+    fun orientationAloneDisablesTaps() = runTest {
+        val fixture = fixture(orientationOk = false)
+        fixture.controller.onTap()
+        assertFalse(fixture.controller.tapsAllowed.value)
+        assertFalse(fixture.controller.uiState.value.clockVisible)
+    }
+
+    @Test
+    fun defaultWindowClosesAtTheSevenOClockMinuteTick() = runTest {
+        val fixture = fixture()
+        advanceTimeBy(SEVEN_AM_MILLIS - 1)
+        runCurrent()
+        assertTrue(fixture.controller.tapsAllowed.value)
+        advanceTimeBy(1)
+        runCurrent()
+        assertFalse(fixture.controller.tapsAllowed.value)
+        fixture.controller.onTap()
+        assertFalse(fixture.controller.uiState.value.clockVisible)
+    }
+
+    @Test
+    fun orientationIsNeverSubscribedWhenLandscapeIsNotRequired() = runTest {
+        val fixture = fixture(NightstandSettings(requireLandscape = false), orientationOk = false)
+        advanceTimeBy(60_000)
+        runCurrent()
+        assertTrue(fixture.controller.tapsAllowed.value)
+        assertEquals(0, fixture.orientationSubscriptions)
+        fixture.settings.value = fixture.settings.value.copy(requireLandscape = true)
+        runCurrent()
+        assertEquals(1, fixture.orientationSubscriptions)
+        assertFalse(fixture.controller.tapsAllowed.value)
+    }
+
+    @Test
+    fun gateClosingWhileVisibleHidesTheClockImmediately() = runTest {
+        val fixture = fixture()
+        fixture.controller.onTap()
+        advanceTimeBy(5_000)
+        fixture.orientation.value = false
+        runCurrent()
+        assertFalse(fixture.controller.uiState.value.clockVisible)
+        fixture.orientation.value = true
+        advanceTimeBy(60_000)
+        runCurrent()
+        assertEquals(listOf(0L to false, 0L to true, 5_000L to false), fixture.visibilityChanges)
+    }
+
+    @Test
+    fun reopeningAGateReallowsTaps() = runTest {
+        val fixture = fixture(NightstandSettings(enabled = false))
+        fixture.controller.onTap()
+        assertFalse(fixture.controller.uiState.value.clockVisible)
+        fixture.settings.value = fixture.settings.value.copy(enabled = true)
+        runCurrent()
+        assertTrue(fixture.controller.tapsAllowed.value)
+        fixture.controller.onTap()
+        assertTrue(fixture.controller.uiState.value.clockVisible)
+    }
+
     private companion object {
         const val TEST_DATE_PATTERN = "yyyy-MM-dd"
+        const val ALWAYS_ON_MINUTES = 0
+        const val ONE_AM_MINUTES = 60
+        const val TWO_AM_MINUTES = 120
+        const val SEVEN_AM_MILLIS = 7 * 3_600_000L
         const val THIRTEEN_OH_FIVE_MILLIS = (13 * 60 + 5) * 60_000L
     }
 }

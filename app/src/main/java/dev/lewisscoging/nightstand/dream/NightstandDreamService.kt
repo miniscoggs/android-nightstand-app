@@ -1,5 +1,6 @@
 package dev.lewisscoging.nightstand.dream
 
+import android.hardware.SensorManager
 import android.service.dreams.DreamService
 import android.text.format.DateFormat
 import androidx.compose.foundation.background
@@ -48,7 +49,9 @@ class NightstandDreamService : DreamService() {
             settings = SettingsRepository(applicationContext.settingsDataStore).settings,
             nowProvider = systemNowProvider,
             systemIs24Hour = { DateFormat.is24HourFormat(this) },
-            datePattern = { DateFormat.getBestDateTimePattern(Locale.getDefault(), DATE_SKELETON) }
+            datePattern = { DateFormat.getBestDateTimePattern(Locale.getDefault(), DATE_SKELETON) },
+            orientation = OrientationMonitor(getSystemService(SensorManager::class.java))
+                .restingOnLongEdge()
         )
         val composeView = ComposeView(this).apply { setContent { DreamContent(controller) } }
         listOf(composeView, window.decorView).forEach { view ->
