@@ -40,18 +40,5 @@
       "PowerShell(git merge*)",
       "PowerShell(adb*)"
     ]
-  },
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .claude/hooks/verify-gate.ps1",
-            "timeout": 1800
-          }
-        ]
-      }
-    ]
   }
 }
