@@ -2,4 +2,6 @@
 <resources>
     <string name="app_name">Nightstand</string>
     <string name="dream_label">Nightstand</string>
+    <string name="settings_enabled_title">Nightstand mode</string>
+    <string name="settings_enabled_summary">Show the clock when you tap the screen saver</string>
 </resources>
