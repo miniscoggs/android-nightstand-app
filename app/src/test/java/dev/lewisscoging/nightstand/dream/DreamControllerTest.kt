@@ -15,24 +15,32 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DreamControllerTest {
-    private class Fixture(testScope: TestScope, initialSettings: NightstandSettings) {
+    private class Fixture(
+        testScope: TestScope,
+        initialSettings: NightstandSettings,
+        systemIs24Hour: Boolean
+    ) {
         val settings = MutableStateFlow(initialSettings)
         val visibilityChanges = mutableListOf<Pair<Long, Boolean>>()
+        var nowCalls = 0
         val controller = DreamController(
             scope = testScope.backgroundScope,
             settings = settings,
             nowProvider = NowProvider {
+                nowCalls++
                 ZonedDateTime.ofInstant(
                     Instant.ofEpochMilli(testScope.testScheduler.currentTime),
                     ZoneOffset.UTC
                 )
             },
-            systemIs24Hour = { true }
+            systemIs24Hour = { systemIs24Hour },
+            datePattern = { TEST_DATE_PATTERN }
         )
 
         init {
@@ -49,10 +57,31 @@ class DreamControllerTest {
         }
     }
 
-    private fun TestScope.fixture(timeoutSeconds: Int = 15) = Fixture(
+    private fun TestScope.fixture(
+        timeoutSeconds: Int = 15,
+        hourFormat: HourFormat = HourFormat.H24,
+        showDate: Boolean = false,
+        systemIs24Hour: Boolean = true
+    ) = Fixture(
         this,
-        NightstandSettings(clockTimeoutSeconds = timeoutSeconds, use24Hour = HourFormat.H24)
+        NightstandSettings(
+            clockTimeoutSeconds = timeoutSeconds,
+            use24Hour = hourFormat,
+            showDate = showDate
+        ),
+        systemIs24Hour
     )
+
+    private fun timeTextAt(hourFormat: HourFormat, systemIs24Hour: Boolean): String {
+        var timeText = ""
+        runTest {
+            val fixture = fixture(hourFormat = hourFormat, systemIs24Hour = systemIs24Hour)
+            advanceTimeBy(THIRTEEN_OH_FIVE_MILLIS)
+            fixture.controller.onTap()
+            timeText = fixture.controller.uiState.value.timeText
+        }
+        return timeText
+    }
 
     @Test
     fun tapShowsTheClockWithTheCurrentTime() = runTest {
@@ -117,5 +146,94 @@ class DreamControllerTest {
             listOf(0L to false, 0L to true, 15_000L to false, 60_000L to true, 65_000L to false),
             fixture.visibilityChanges
         )
+    }
+
+    @Test
+    fun nowIsNeverReadWhileHidden() = runTest {
+        val fixture = fixture()
+        advanceTimeBy(60_000)
+        runCurrent()
+        assertEquals(0, fixture.nowCalls)
+        fixture.controller.onTap()
+        advanceTimeBy(15_000)
+        runCurrent()
+        assertFalse(fixture.controller.uiState.value.clockVisible)
+        val callsWhenHidden = fixture.nowCalls
+        assertTrue(callsWhenHidden > 1)
+        advanceTimeBy(3_600_000)
+        runCurrent()
+        assertEquals(callsWhenHidden, fixture.nowCalls)
+    }
+
+    @Test
+    fun timeTextRollsOverAtTheMinute() = runTest {
+        val fixture = fixture()
+        advanceTimeBy(59_500)
+        fixture.controller.onTap()
+        assertEquals("00:00", fixture.controller.uiState.value.timeText)
+        advanceTimeBy(499)
+        runCurrent()
+        assertEquals("00:00", fixture.controller.uiState.value.timeText)
+        advanceTimeBy(1)
+        runCurrent()
+        assertEquals("00:01", fixture.controller.uiState.value.timeText)
+    }
+
+    @Test
+    fun tickDelaysArePositiveAndAtMostOneSecond() {
+        val startOfSecond = ZonedDateTime.of(2026, 11, 8, 23, 59, 59, 0, ZoneOffset.UTC)
+        listOf(0, 1, 1_000_000, 500_000_000, 999_000_000, 999_999_999).forEach { nanos ->
+            val delayMillis = millisUntilNextSecond(startOfSecond.withNano(nanos))
+            assertTrue("delay $delayMillis at $nanos ns", delayMillis in 1L..1_000L)
+        }
+        assertEquals(1_000L, millisUntilNextSecond(startOfSecond))
+        assertEquals(500L, millisUntilNextSecond(startOfSecond.withNano(500_000_000)))
+    }
+
+    @Test
+    fun ticksLandOnWholeSeconds() = runTest {
+        val fixture = fixture()
+        val tickTimes = mutableListOf<Long>()
+        backgroundScope.launch {
+            fixture.controller.uiState.collect { tickTimes += testScheduler.currentTime }
+        }
+        advanceTimeBy(59_700)
+        fixture.controller.onTap()
+        advanceTimeBy(2_500)
+        runCurrent()
+        assertEquals(listOf(0L, 59_700L, 60_000L), tickTimes.distinct())
+    }
+
+    @Test
+    fun dateAppearsOnlyWhenShowDateIsOn() = runTest {
+        val withDate = fixture(showDate = true)
+        withDate.controller.onTap()
+        assertEquals("1970-01-01", withDate.controller.uiState.value.dateText)
+        val withoutDate = fixture(showDate = false)
+        withoutDate.controller.onTap()
+        assertNull(withoutDate.controller.uiState.value.dateText)
+    }
+
+    @Test
+    fun turningShowDateOffClearsTheDateOnTheNextTick() = runTest {
+        val fixture = fixture(showDate = true)
+        fixture.controller.onTap()
+        fixture.settings.value = fixture.settings.value.copy(showDate = false)
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertNull(fixture.controller.uiState.value.dateText)
+    }
+
+    @Test
+    fun hourFormatFollowsResolveUse24Hour() {
+        assertEquals("13:05", timeTextAt(HourFormat.H24, systemIs24Hour = false))
+        assertEquals("1:05", timeTextAt(HourFormat.H12, systemIs24Hour = true))
+        assertEquals("13:05", timeTextAt(HourFormat.SYSTEM, systemIs24Hour = true))
+        assertEquals("1:05", timeTextAt(HourFormat.SYSTEM, systemIs24Hour = false))
+    }
+
+    private companion object {
+        const val TEST_DATE_PATTERN = "yyyy-MM-dd"
+        const val THIRTEEN_OH_FIVE_MILLIS = (13 * 60 + 5) * 60_000L
     }
 }
