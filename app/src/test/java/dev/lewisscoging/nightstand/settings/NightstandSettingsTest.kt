@@ -77,6 +77,13 @@ class NightstandSettingsTest {
         assertEquals(1.0f, defaults.copy(clockBrightness = 1.5f).sanitised().clockBrightness, 0f)
 
     @Test
+    fun nanBrightnessFallsBackToTheDefault() = assertEquals(
+        DEFAULT_CLOCK_BRIGHTNESS,
+        defaults.copy(clockBrightness = Float.NaN).sanitised().clockBrightness,
+        0f
+    )
+
+    @Test
     fun negativeTimesClampToMidnight() {
         val sanitised = defaults.copy(startTime = -1, endTime = -100).sanitised()
         assertEquals(0, sanitised.startTime)

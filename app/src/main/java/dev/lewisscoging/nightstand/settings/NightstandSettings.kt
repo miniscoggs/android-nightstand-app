@@ -54,6 +54,10 @@ data class NightstandSettings(
         startTime = startTime.coerceIn(MINUTE_OF_DAY_RANGE),
         endTime = endTime.coerceIn(MINUTE_OF_DAY_RANGE),
         clockTimeoutSeconds = clockTimeoutSeconds.coerceIn(CLOCK_TIMEOUT_RANGE),
-        clockBrightness = clockBrightness.coerceIn(CLOCK_BRIGHTNESS_RANGE)
+        clockBrightness = if (clockBrightness.isNaN()) {
+            DEFAULT_CLOCK_BRIGHTNESS
+        } else {
+            clockBrightness.coerceIn(CLOCK_BRIGHTNESS_RANGE)
+        }
     )
 }
