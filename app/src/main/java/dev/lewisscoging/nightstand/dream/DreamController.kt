@@ -3,7 +3,10 @@ package dev.lewisscoging.nightstand.dream
 import dev.lewisscoging.nightstand.clock.formatClock
 import dev.lewisscoging.nightstand.clock.formatDate
 import dev.lewisscoging.nightstand.clock.resolveUse24Hour
+import dev.lewisscoging.nightstand.clock.toClockStyle
+import dev.lewisscoging.nightstand.core.BurnInOffset
 import dev.lewisscoging.nightstand.core.NowProvider
+import dev.lewisscoging.nightstand.core.burnInOffset
 import dev.lewisscoging.nightstand.core.isWithinWindow
 import dev.lewisscoging.nightstand.core.toMinutesOfDay
 import dev.lewisscoging.nightstand.settings.NightstandSettings
@@ -33,6 +36,7 @@ import kotlinx.coroutines.launch
 
 private const val MILLIS_PER_SECOND = 1_000L
 private const val MILLIS_PER_MINUTE = 60_000L
+private const val SECONDS_PER_MINUTE = 60L
 
 /** Delay from [now] to the next whole second: always in 1..1000 ms. */
 internal fun millisUntilNextSecond(now: ZonedDateTime): Long =
@@ -99,6 +103,13 @@ class DreamController(
         scope.launch {
             tapsAllowed.collect { allowed -> if (!allowed) hideClock() }
         }
+        scope.launch {
+            loadedSettings.collect { currentSettings ->
+                mutableUiState.update { state ->
+                    state.copy(style = currentSettings.toClockStyle(state.style.offset))
+                }
+            }
+        }
     }
 
     fun onTap() {
@@ -121,6 +132,9 @@ class DreamController(
         }
     }
 
+    private fun burnInOffsetAt(now: ZonedDateTime): BurnInOffset =
+        burnInOffset(Math.floorDiv(now.toEpochSecond(), SECONDS_PER_MINUTE))
+
     private fun currentSettings(): NightstandSettings = latestSettings.value ?: NightstandSettings()
 
     private fun hideClock() {
@@ -141,7 +155,12 @@ class DreamController(
             null
         }
         mutableUiState.update { state ->
-            state.copy(clockVisible = true, timeText = timeText, dateText = dateText)
+            state.copy(
+                clockVisible = true,
+                timeText = timeText,
+                dateText = dateText,
+                style = currentSettings.toClockStyle(burnInOffsetAt(now))
+            )
         }
     }
 }

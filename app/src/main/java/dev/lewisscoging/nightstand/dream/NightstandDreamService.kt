@@ -89,13 +89,14 @@ private fun DreamContent(controller: DreamController, modifier: Modifier = Modif
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(Color(uiState.style.backgroundArgb))
             .pointerInput(controller) { detectTapGestures(onTap = { controller.onTap() }) }
     ) {
         ClockFace(
             visible = uiState.clockVisible,
             timeText = uiState.timeText,
-            dateText = uiState.dateText
+            dateText = uiState.dateText,
+            style = uiState.style
         )
     }
 }

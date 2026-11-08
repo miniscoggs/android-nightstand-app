@@ -1,8 +1,16 @@
 package dev.lewisscoging.nightstand.dream
 
+import dev.lewisscoging.nightstand.clock.BACKGROUND_MIDNIGHT_BLUE_ARGB
+import dev.lewisscoging.nightstand.clock.BACKGROUND_OFF_ARGB
+import dev.lewisscoging.nightstand.clock.TEXT_RED_ARGB
+import dev.lewisscoging.nightstand.core.BurnInOffset
 import dev.lewisscoging.nightstand.core.NowProvider
+import dev.lewisscoging.nightstand.core.burnInOffset
+import dev.lewisscoging.nightstand.settings.BackgroundColor
+import dev.lewisscoging.nightstand.settings.ClockFont
 import dev.lewisscoging.nightstand.settings.HourFormat
 import dev.lewisscoging.nightstand.settings.NightstandSettings
+import dev.lewisscoging.nightstand.settings.TextColor
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -16,6 +24,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -312,7 +321,68 @@ class DreamControllerTest {
         assertTrue(fixture.controller.uiState.value.clockVisible)
     }
 
+    @Test
+    fun settingsEmissionWhileVisibleUpdatesTheStyle() = runTest {
+        val fixture = fixture(NightstandSettings(clockBrightness = 1f))
+        fixture.controller.onTap()
+        assertEquals(ClockFont.SYSTEM, fixture.controller.uiState.value.style.font)
+        fixture.settings.value = fixture.settings.value.copy(
+            clockFont = ClockFont.DIGITAL,
+            textColor = TextColor.RED,
+            backgroundColor = BackgroundColor.MIDNIGHT_BLUE
+        )
+        runCurrent()
+        val state = fixture.controller.uiState.value
+        assertTrue(state.clockVisible)
+        assertEquals(ClockFont.DIGITAL, state.style.font)
+        assertEquals(TEXT_RED_ARGB, state.style.textArgb)
+        assertEquals(BACKGROUND_MIDNIGHT_BLUE_ARGB, state.style.backgroundArgb)
+    }
+
+    @Test
+    fun burnInOffsetChangesAtTheMinuteBoundaryOnlyWhenEnabled() = runTest {
+        val enabled = fixture(NightstandSettings(clockTimeoutSeconds = MAX_TIMEOUT_SECONDS))
+        val disabled = fixture(
+            NightstandSettings(clockTimeoutSeconds = MAX_TIMEOUT_SECONDS, burnInShift = false)
+        )
+        enabled.controller.onTap()
+        disabled.controller.onTap()
+        advanceTimeBy(59_999)
+        runCurrent()
+        assertEquals(burnInOffset(0), enabled.controller.uiState.value.style.offset)
+        assertEquals(BurnInOffset(0, 0), disabled.controller.uiState.value.style.offset)
+        advanceTimeBy(1)
+        runCurrent()
+        assertEquals(burnInOffset(1), enabled.controller.uiState.value.style.offset)
+        assertNotEquals(burnInOffset(0), burnInOffset(1))
+        assertEquals(BurnInOffset(0, 0), disabled.controller.uiState.value.style.offset)
+    }
+
+    @Test
+    fun brightnessScalesBothColoursAndOffStaysBlack() = runTest {
+        val tinted = fixture(
+            NightstandSettings(
+                textColor = TextColor.WHITE,
+                backgroundColor = BackgroundColor.DARK_GREY,
+                clockBrightness = 0.5f
+            )
+        )
+        tinted.controller.onTap()
+        assertEquals(HALF_WHITE_ARGB, tinted.controller.uiState.value.style.textArgb)
+        assertEquals(HALF_DARK_GREY_ARGB, tinted.controller.uiState.value.style.backgroundArgb)
+        val black = fixture(
+            NightstandSettings(backgroundColor = BackgroundColor.OFF, clockBrightness = 1f)
+        )
+        assertEquals(BACKGROUND_OFF_ARGB, black.controller.uiState.value.style.backgroundArgb)
+        black.settings.value = black.settings.value.copy(clockBrightness = 0.05f)
+        runCurrent()
+        assertEquals(BACKGROUND_OFF_ARGB, black.controller.uiState.value.style.backgroundArgb)
+    }
+
     private companion object {
+        const val MAX_TIMEOUT_SECONDS = 120
+        const val HALF_WHITE_ARGB = 0xFF808080.toInt()
+        const val HALF_DARK_GREY_ARGB = 0xFF0E0E0F.toInt()
         const val TEST_DATE_PATTERN = "yyyy-MM-dd"
         const val ALWAYS_ON_MINUTES = 0
         const val ONE_AM_MINUTES = 60
