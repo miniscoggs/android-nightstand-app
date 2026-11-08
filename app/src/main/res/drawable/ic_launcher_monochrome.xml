@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- same shapes as ic_launcher_foreground; themed icons use only the alpha channel -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M49.39,34.16A22,22 0,1 0,73.45 60.89A18,18 0,0 1,49.39 34.16Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M72,31L73.2,34.8L77,36L73.2,37.2L72,41L70.8,37.2L67,36L70.8,34.8Z" />
+</vector>

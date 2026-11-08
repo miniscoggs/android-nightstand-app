@@ -4,8 +4,12 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- crescent: a radius-20 disc at the centre minus an offset radius-18 disc, inside the 66dp safe zone -->
+    <!-- crescent: a radius-22 disc at (52,56) minus a radius-18 disc at (62,47), inside the 66dp safe zone -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M47.75,35A20,20 0,1 0,73 60.25A18,18 0,0 1,47.75 35Z" />
+        android:fillColor="#FFC56B"
+        android:pathData="M49.39,34.16A22,22 0,1 0,73.45 60.89A18,18 0,0 1,49.39 34.16Z" />
+    <!-- four-point star centred at (72,36), sitting in the crescent's bite -->
+    <path
+        android:fillColor="#FFE6B3"
+        android:pathData="M72,31L73.2,34.8L77,36L73.2,37.2L72,41L70.8,37.2L67,36L70.8,34.8Z" />
 </vector>
