@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -36,9 +37,29 @@ android {
     buildFeatures {
         compose = true
     }
+
+    lint {
+        abortOnError = true
+        warningsAsErrors = true
+        // Version-nag checks depend on what has been published since, so the same code would start failing over time.
+        disable +=
+            setOf(
+                "GradleDependency",
+                "NewerVersionAvailable",
+                "AndroidGradlePluginVersion",
+                "OldTargetApi"
+            )
+    }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    source.setFrom("src/main/java", "src/main/kotlin", "src/test/java", "src/test/kotlin")
 }
 
 dependencies {
+    detektPlugins(libs.compose.rules.detekt)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
