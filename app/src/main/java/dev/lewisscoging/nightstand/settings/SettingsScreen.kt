@@ -41,6 +41,7 @@ private fun SettingsContent(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) }
     ) { innerPadding ->
         LazyColumn(contentPadding = innerPadding) {
+            item { SetupCard() }
             item {
                 SwitchRow(
                     title = stringResource(R.string.settings_enabled_title),

@@ -2,6 +2,13 @@
 <resources>
     <string name="app_name">Nightstand</string>
     <string name="dream_label">Nightstand</string>
+    <string name="settings_setup_title">Set up the screen saver</string>
+    <string name="settings_setup_steps">1. Open %1$s.\n2. Choose Nightstand as the screen saver.\n3. Set it to start %2$s.</string>
+    <string name="settings_setup_timing_note">Nightstand starts once the screen times out while the phone is charging, not as soon as you plug it in.</string>
+    <string name="settings_setup_open_button">Open screen saver settings</string>
+    <!-- provisional One UI wording until Step 8.2 records the real path and label -->
+    <string name="setup_screen_saver_menu_path">Settings &gt; Display &gt; Screen saver</string>
+    <string name="setup_while_charging_label">\"While charging\"</string>
     <string name="settings_enabled_title">Nightstand mode</string>
     <string name="settings_enabled_summary">Show the clock when you tap the screen saver</string>
     <string name="settings_behaviour_header">Behaviour</string>
