@@ -8,11 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
-fun NightstandTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
+fun NightstandTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val context = LocalContext.current
-    val colorScheme = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context) // min SDK 31 always has dynamic colour, so no static fallback
+    // min SDK 31 always has dynamic colour, so no static fallback
+    val colorScheme =
+        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
     MaterialTheme(colorScheme = colorScheme, content = content)
 }

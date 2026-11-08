@@ -17,7 +17,7 @@ fun SettingsScreen(modifier: Modifier = Modifier) {
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium
             )
         }
     }
