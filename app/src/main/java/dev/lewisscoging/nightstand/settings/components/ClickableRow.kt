@@ -12,11 +12,11 @@ fun ClickableRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     summary: String? = null,
-    enabled: Boolean = true
+    onClickLabel: String? = null
 ) {
     ListItem(
         headlineContent = { Text(title) },
         supportingContent = summary?.let { { Text(it) } },
-        modifier = modifier.clickable(enabled = enabled, onClick = onClick)
+        modifier = modifier.clickable(onClickLabel = onClickLabel, onClick = onClick)
     )
 }

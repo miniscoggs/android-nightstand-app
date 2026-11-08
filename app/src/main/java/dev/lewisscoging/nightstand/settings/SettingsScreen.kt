@@ -21,9 +21,10 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val actions: SettingsActions = viewModel
     SettingsContent(
         settings = settings,
-        onEnabledChange = viewModel::setEnabled,
+        actions = actions,
         modifier = modifier
     )
 }
@@ -32,7 +33,7 @@ fun SettingsScreen(
 @Composable
 private fun SettingsContent(
     settings: NightstandSettings,
-    onEnabledChange: (Boolean) -> Unit,
+    actions: SettingsActions,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -45,9 +46,10 @@ private fun SettingsContent(
                     title = stringResource(R.string.settings_enabled_title),
                     summary = stringResource(R.string.settings_enabled_summary),
                     checked = settings.enabled,
-                    onCheckedChange = onEnabledChange
+                    onCheckedChange = actions::setEnabled
                 )
             }
+            behaviourSection(settings = settings, actions = actions)
         }
     }
 }

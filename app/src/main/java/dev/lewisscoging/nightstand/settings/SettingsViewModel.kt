@@ -15,36 +15,46 @@ private const val SUBSCRIPTION_TIMEOUT_MS = 5_000L
 
 // One setter per persisted field is the screen's contract, so the function count grows with the model.
 @Suppress("TooManyFunctions")
-class SettingsViewModel(private val repository: SettingsRepository) : ViewModel() {
+class SettingsViewModel(private val repository: SettingsRepository) :
+    ViewModel(),
+    SettingsActions {
     val settings: StateFlow<NightstandSettings> = repository.settings.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT_MS),
         initialValue = NightstandSettings()
     )
 
-    fun setEnabled(enabled: Boolean) = update { it.copy(enabled = enabled) }
+    override fun setEnabled(enabled: Boolean) = update { it.copy(enabled = enabled) }
 
-    fun setStartTime(minutesOfDay: Int) = update { it.copy(startTime = minutesOfDay) }
+    override fun setStartTime(minutesOfDay: Int) = update { it.copy(startTime = minutesOfDay) }
 
-    fun setEndTime(minutesOfDay: Int) = update { it.copy(endTime = minutesOfDay) }
+    override fun setEndTime(minutesOfDay: Int) = update { it.copy(endTime = minutesOfDay) }
 
-    fun setClockTimeoutSeconds(seconds: Int) = update { it.copy(clockTimeoutSeconds = seconds) }
+    override fun setClockTimeoutSeconds(seconds: Int) = update {
+        it.copy(clockTimeoutSeconds = seconds)
+    }
 
-    fun setRequireLandscape(required: Boolean) = update { it.copy(requireLandscape = required) }
+    override fun setRequireLandscape(required: Boolean) = update {
+        it.copy(requireLandscape = required)
+    }
 
-    fun setUse24Hour(format: HourFormat) = update { it.copy(use24Hour = format) }
+    override fun setUse24Hour(format: HourFormat) = update { it.copy(use24Hour = format) }
 
-    fun setClockFont(font: ClockFont) = update { it.copy(clockFont = font) }
+    override fun setClockFont(font: ClockFont) = update { it.copy(clockFont = font) }
 
-    fun setTextColor(color: TextColor) = update { it.copy(textColor = color) }
+    override fun setTextColor(color: TextColor) = update { it.copy(textColor = color) }
 
-    fun setBackgroundColor(color: BackgroundColor) = update { it.copy(backgroundColor = color) }
+    override fun setBackgroundColor(color: BackgroundColor) = update {
+        it.copy(backgroundColor = color)
+    }
 
-    fun setClockBrightness(brightness: Float) = update { it.copy(clockBrightness = brightness) }
+    override fun setClockBrightness(brightness: Float) = update {
+        it.copy(clockBrightness = brightness)
+    }
 
-    fun setShowDate(show: Boolean) = update { it.copy(showDate = show) }
+    override fun setShowDate(show: Boolean) = update { it.copy(showDate = show) }
 
-    fun setBurnInShift(shift: Boolean) = update { it.copy(burnInShift = shift) }
+    override fun setBurnInShift(shift: Boolean) = update { it.copy(burnInShift = shift) }
 
     private fun update(transform: (NightstandSettings) -> NightstandSettings) {
         viewModelScope.launch { repository.update(transform) }

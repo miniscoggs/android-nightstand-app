@@ -8,6 +8,11 @@ const val LAST_MINUTE_OF_DAY = MINUTES_PER_DAY - 1
 
 fun LocalTime.toMinutesOfDay(): Int = hour * MINUTES_PER_HOUR + minute
 
+fun minutesOfDayToLocalTime(minutesOfDay: Int): LocalTime {
+    requireMinuteOfDay(minutesOfDay, "minutesOfDay")
+    return LocalTime.of(minutesOfDay / MINUTES_PER_HOUR, minutesOfDay % MINUTES_PER_HOUR)
+}
+
 /** True when [nowMinutes] lies in the window, including its start minute and excluding its end minute. */
 fun isWithinWindow(nowMinutes: Int, startMinutes: Int, endMinutes: Int): Boolean {
     requireMinuteOfDay(nowMinutes, "nowMinutes")

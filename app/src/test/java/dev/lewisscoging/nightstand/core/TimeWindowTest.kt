@@ -94,4 +94,19 @@ class TimeWindowTest {
     fun outOfRangeEndThrows() {
         isWithinWindow(0, nightStart, -1)
     }
+
+    @Test
+    fun minutesOfDayToLocalTimeRoundTrips() {
+        assertEquals(LocalTime.MIDNIGHT, minutesOfDayToLocalTime(0))
+        assertEquals(LocalTime.of(22, 0), minutesOfDayToLocalTime(1320))
+        assertEquals(LocalTime.of(23, 59), minutesOfDayToLocalTime(LAST_MINUTE_OF_DAY))
+        for (minutes in 0..LAST_MINUTE_OF_DAY) {
+            assertEquals(minutes, minutesOfDayToLocalTime(minutes).toMinutesOfDay())
+        }
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun minutesOfDayToLocalTimeRejectsOutOfRange() {
+        minutesOfDayToLocalTime(MINUTES_PER_DAY)
+    }
 }

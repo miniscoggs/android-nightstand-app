@@ -9,6 +9,9 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 
 // Mirrors the Material Slider parameters it forwards; a holder class would only obscure the call sites.
@@ -38,7 +41,11 @@ fun SliderRow(
             onValueChange = onValueChange,
             valueRange = valueRange,
             steps = steps,
-            onValueChangeFinished = onValueChangeFinished
+            onValueChangeFinished = onValueChangeFinished,
+            modifier = Modifier.semantics {
+                contentDescription = title
+                stateDescription = valueLabel
+            }
         )
     }
 }
