@@ -83,4 +83,28 @@ class ClockFormatterTest {
         val date = LocalDate.of(2026, 11, 8)
         assertEquals("Sun 8 Nov", formatDate(date, "EEE d MMM", Locale.UK))
     }
+
+    @Test
+    fun formatDateFallsBackWhenPatternIsUnsupported() {
+        val date = LocalDate.of(2026, 11, 8)
+        val unsupportedPattern = "EEE d MMM {" // reserved letter in java.time
+        assertEquals(
+            formatDate(date, FALLBACK_DATE_PATTERN, Locale.GERMANY),
+            formatDate(date, unsupportedPattern, Locale.GERMANY)
+        )
+    }
+
+    @Test
+    fun formatDatePicksUpChangedPattern() {
+        val date = LocalDate.of(2026, 11, 8)
+        assertEquals("Sun 8 Nov", formatDate(date, "EEE d MMM", Locale.UK))
+        assertEquals("8 Nov 2026", formatDate(date, "d MMM yyyy", Locale.UK))
+    }
+
+    @Test
+    fun formatDatePicksUpChangedLocale() {
+        val date = LocalDate.of(2026, 11, 8)
+        assertEquals("Sun 8 Nov", formatDate(date, "EEE d MMM", Locale.UK))
+        assertEquals("So. 8 Nov.", formatDate(date, "EEE d MMM", Locale.GERMANY))
+    }
 }

@@ -8,6 +8,7 @@ import java.util.Locale
 
 const val CLOCK_PATTERN_24_HOUR = "HH:mm"
 const val CLOCK_PATTERN_12_HOUR = "h:mm"
+const val FALLBACK_DATE_PATTERN = "EEE d MMM" // when java.time rejects the system's ICU pattern
 
 private val clockFormatter24Hour = DateTimeFormatter.ofPattern(CLOCK_PATTERN_24_HOUR, Locale.ROOT)
 private val clockFormatter12Hour = DateTimeFormatter.ofPattern(CLOCK_PATTERN_12_HOUR, Locale.ROOT)
@@ -24,5 +25,24 @@ fun formatClock(time: LocalTime, use24Hour: Boolean): String {
     return time.format(formatter)
 }
 
-fun formatDate(date: LocalDate, pattern: String, locale: Locale): String =
-    date.format(DateTimeFormatter.ofPattern(pattern, locale))
+private class DateFormatterCacheEntry(
+    val pattern: String,
+    val locale: Locale,
+    val formatter: DateTimeFormatter
+)
+
+@Volatile private var dateFormatterCache: DateFormatterCacheEntry? = null // reused across ticks
+
+/** Formats [date] with [pattern], or with [FALLBACK_DATE_PATTERN] if java.time rejects [pattern]. */
+fun formatDate(date: LocalDate, pattern: String, locale: Locale): String {
+    val cacheEntry = dateFormatterCache?.takeIf { it.pattern == pattern && it.locale == locale }
+        ?: DateFormatterCacheEntry(pattern, locale, dateFormatterOrFallback(pattern, locale))
+            .also { dateFormatterCache = it }
+    return date.format(cacheEntry.formatter)
+}
+
+private fun dateFormatterOrFallback(pattern: String, locale: Locale): DateTimeFormatter = try {
+    DateTimeFormatter.ofPattern(pattern, locale)
+} catch (_: IllegalArgumentException) {
+    DateTimeFormatter.ofPattern(FALLBACK_DATE_PATTERN, locale)
+}
