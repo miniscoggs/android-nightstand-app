@@ -23,7 +23,7 @@ class OrientationMonitor(private val sensorManager: SensorManager) {
 
     /**
      * Cold flow: a sensor is registered only while collected. Emits after each reading has held
-     * for [ORIENTATION_STABLE_MS]. With no gravity sensor and no accelerometer it emits true once.
+     * for [ORIENTATION_STABLE_MS]. With no usable gravity sensor or accelerometer it emits true once.
      */
     fun restingOnLongEdge(): Flow<Boolean> {
         val gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
@@ -62,7 +62,11 @@ class OrientationMonitor(private val sensorManager: SensorManager) {
 
             override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) = Unit
         }
-        sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+        if (!sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL)) {
+            Log.w(TAG, "Orientation sensor could not be registered; orientation gate passes")
+            trySend(true)
+            close() // completing lets the stability debounce pass true on at once
+        }
         awaitClose { sensorManager.unregisterListener(listener) }
     }
 }

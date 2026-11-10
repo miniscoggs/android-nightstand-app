@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -76,27 +76,35 @@ class DreamController(
         }
     }
 
-    private val withinWindow: Flow<Boolean> =
+    /** The settings and window state the gate depends on; unrelated settings are left out. */
+    private data class GateInputs(
+        val enabled: Boolean,
+        val inWindow: Boolean,
+        val requireLandscape: Boolean
+    )
+
+    private val gateInputs: Flow<GateInputs> =
         combine(loadedSettings, minuteTicks) { currentSettings, now ->
-            isWithinWindow(
-                now.toLocalTime().toMinutesOfDay(),
-                currentSettings.startTime,
-                currentSettings.endTime
+            GateInputs(
+                enabled = currentSettings.enabled,
+                inWindow = isWithinWindow(
+                    now.toLocalTime().toMinutesOfDay(),
+                    currentSettings.startTime,
+                    currentSettings.endTime
+                ),
+                requireLandscape = currentSettings.requireLandscape
             )
-        }
+        }.distinctUntilChanged()
 
-    private val orientationOk: Flow<Boolean> = loadedSettings
-        .map { it.requireLandscape }
-        .distinctUntilChanged()
-        .flatMapLatest { requireLandscape -> if (requireLandscape) orientation else flowOf(true) }
-
-    val tapsAllowed: StateFlow<Boolean> =
-        combine(loadedSettings, withinWindow, orientationOk) {
-                currentSettings,
-                inWindow,
-                oriented
-            ->
-            currentSettings.enabled && inWindow && oriented
+    // Orientation is collected only while it can open the gate, so the sensor stays off while
+    // disabled or outside the window. Each subscription starts closed until the first reading.
+    val tapsAllowed: StateFlow<Boolean> = gateInputs
+        .flatMapLatest { inputs ->
+            when {
+                !inputs.enabled || !inputs.inWindow -> flowOf(false)
+                !inputs.requireLandscape -> flowOf(true)
+                else -> orientation.onStart { emit(false) }
+            }
         }.stateIn(scope, SharingStarted.Eagerly, false)
 
     init {
