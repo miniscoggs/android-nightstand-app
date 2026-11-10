@@ -6,8 +6,11 @@ import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.AP
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -23,6 +26,12 @@ class SettingsViewModel(private val repository: SettingsRepository) :
         started = SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT_MS),
         initialValue = NightstandSettings()
     )
+
+    // Buffered so a failure is still shown if it happens while the screen is not collecting.
+    private val saveFailureEvents = Channel<Unit>(Channel.BUFFERED)
+
+    /** Emits once per settings write that failed; each emission goes to one collector. */
+    val saveFailures: Flow<Unit> = saveFailureEvents.receiveAsFlow()
 
     override fun setEnabled(enabled: Boolean) = update { it.copy(enabled = enabled) }
 
@@ -57,7 +66,9 @@ class SettingsViewModel(private val repository: SettingsRepository) :
     override fun setBurnInShift(shift: Boolean) = update { it.copy(burnInShift = shift) }
 
     private fun update(transform: (NightstandSettings) -> NightstandSettings) {
-        viewModelScope.launch { repository.update(transform) }
+        viewModelScope.launch {
+            if (!repository.update(transform)) saveFailureEvents.send(Unit)
+        }
     }
 
     companion object {

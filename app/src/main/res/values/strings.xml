@@ -11,6 +11,7 @@
     <string name="setup_while_charging_label">\"While charging\"</string>
     <string name="settings_enabled_title">Nightstand mode</string>
     <string name="settings_enabled_summary">Show the clock when you tap the screen saver</string>
+    <string name="settings_save_failed">Could not save the setting. Try again.</string>
     <string name="settings_behaviour_header">Behaviour</string>
     <string name="settings_start_time_title">Start time</string>
     <string name="settings_end_time_title">End time</string>

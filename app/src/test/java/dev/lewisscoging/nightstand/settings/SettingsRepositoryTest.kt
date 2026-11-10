@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferencesSerializer
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
@@ -14,6 +15,8 @@ import kotlinx.coroutines.test.runTest
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -157,5 +160,23 @@ class SettingsRepositoryTest {
             MAX_CLOCK_TIMEOUT_SECONDS,
             store.data.first()[SettingsKeys.CLOCK_TIMEOUT_SECONDS]
         )
+    }
+
+    @Test
+    fun successfulUpdateReturnsTrue() = repositoryTest { _, repository ->
+        assertTrue(repository.update { it.copy(showDate = true) })
+    }
+
+    @Test
+    fun updateThatFailsWithAnIoExceptionReturnsFalse() = runTest {
+        val repository = SettingsRepository(ThrowingDataStore(IOException("disk full")))
+        assertFalse(repository.update { it.copy(showDate = true) })
+    }
+
+    @Test
+    fun updateThatFailsWithAnotherExceptionPropagates() = runTest {
+        val repository = SettingsRepository(ThrowingDataStore(IllegalStateException("bug")))
+        val failure = runCatching { repository.update { it.copy(showDate = true) } }
+        assertTrue(failure.exceptionOrNull() is IllegalStateException)
     }
 }

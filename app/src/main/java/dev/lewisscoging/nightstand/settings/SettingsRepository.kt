@@ -18,9 +18,16 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         .map { it.toNightstandSettings() }
         .distinctUntilChanged()
 
-    suspend fun update(transform: (NightstandSettings) -> NightstandSettings) {
+    /**
+     * Applies [transform] and writes the result. Returns false when the write fails with an
+     * [IOException] (the caller reports it); any other exception is a bug and propagates.
+     */
+    suspend fun update(transform: (NightstandSettings) -> NightstandSettings): Boolean = try {
         dataStore.edit { preferences ->
             preferences.writeSettings(transform(preferences.toNightstandSettings()).sanitised())
         }
+        true
+    } catch (_: IOException) {
+        false
     }
 }

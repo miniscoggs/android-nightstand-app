@@ -3,12 +3,14 @@ package dev.lewisscoging.nightstand.settings
 import androidx.datastore.core.okio.OkioStorage
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.PreferencesSerializer
+import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -35,6 +37,14 @@ class SettingsViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    private fun TestScope.collectSaveFailures(viewModel: SettingsViewModel): List<Unit> {
+        val failures = mutableListOf<Unit>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.saveFailures.collect { failures += it }
+        }
+        return failures
     }
 
     private fun viewModelTest(block: suspend TestScope.(SettingsViewModel) -> Unit) = runTest {
@@ -114,4 +124,25 @@ class SettingsViewModelTest {
     @Test
     fun setBurnInShiftUpdatesState() =
         assertUpdates(NightstandSettings(burnInShift = false)) { setBurnInShift(false) }
+
+    @Test
+    fun eachFailedWriteEmitsOneSaveFailure() = runTest {
+        val viewModel =
+            SettingsViewModel(SettingsRepository(ThrowingDataStore(IOException("full"))))
+        val failures = collectSaveFailures(viewModel)
+        viewModel.setShowDate(true)
+        viewModel.setBurnInShift(false)
+        advanceUntilIdle()
+        assertEquals(2, failures.size)
+    }
+
+    @Test
+    fun successfulWriteEmitsNoSaveFailure() = viewModelTest { viewModel ->
+        val failures = collectSaveFailures(viewModel)
+        val expected = NightstandSettings(showDate = true)
+        viewModel.setShowDate(true)
+        viewModel.settings.first { it == expected }
+        advanceUntilIdle()
+        assertEquals(0, failures.size)
+    }
 }

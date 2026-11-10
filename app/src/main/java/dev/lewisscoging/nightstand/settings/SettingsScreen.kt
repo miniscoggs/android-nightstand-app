@@ -4,10 +4,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -22,9 +26,15 @@ fun SettingsScreen(
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val actions: SettingsActions = viewModel
+    val snackbarHostState = remember { SnackbarHostState() }
+    val saveFailedMessage = stringResource(R.string.settings_save_failed)
+    LaunchedEffect(viewModel, saveFailedMessage) {
+        viewModel.saveFailures.collect { snackbarHostState.showSnackbar(saveFailedMessage) }
+    }
     SettingsContent(
         settings = settings,
         actions = actions,
+        snackbarHostState = snackbarHostState,
         modifier = modifier
     )
 }
@@ -34,11 +44,13 @@ fun SettingsScreen(
 private fun SettingsContent(
     settings: NightstandSettings,
     actions: SettingsActions,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) }
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         LazyColumn(contentPadding = innerPadding) {
             item { SetupCard() }
