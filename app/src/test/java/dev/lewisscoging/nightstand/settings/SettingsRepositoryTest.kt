@@ -163,6 +163,30 @@ class SettingsRepositoryTest {
     }
 
     @Test
+    fun changingOneFieldOnAnEmptyStoreWritesOnlyThatKey() = repositoryTest { store, repository ->
+        repository.update { it.copy(showDate = true) }
+        val stored = store.data.first().asMap()
+        assertEquals(setOf(SettingsKeys.SHOW_DATE), stored.keys)
+        assertEquals(true, stored[SettingsKeys.SHOW_DATE])
+    }
+
+    @Test
+    fun changingAFieldBackToItsDefaultStillStoresIt() = repositoryTest { store, repository ->
+        repository.update { it.copy(clockTimeoutSeconds = 60) }
+        repository.update { it.copy(clockTimeoutSeconds = DEFAULT_CLOCK_TIMEOUT_SECONDS) }
+        assertEquals(
+            DEFAULT_CLOCK_TIMEOUT_SECONDS,
+            store.data.first()[SettingsKeys.CLOCK_TIMEOUT_SECONDS]
+        )
+    }
+
+    @Test
+    fun updateThatChangesNothingWritesNoKeys() = repositoryTest { store, repository ->
+        assertTrue(repository.update { it })
+        assertTrue(store.data.first().asMap().isEmpty())
+    }
+
+    @Test
     fun successfulUpdateReturnsTrue() = repositoryTest { _, repository ->
         assertTrue(repository.update { it.copy(showDate = true) })
     }

@@ -19,12 +19,14 @@ class SettingsRepository(private val dataStore: DataStore<Preferences>) {
         .distinctUntilChanged()
 
     /**
-     * Applies [transform] and writes the result. Returns false when the write fails with an
-     * [IOException] (the caller reports it); any other exception is a bug and propagates.
+     * Applies [transform] and writes only the fields it changed. Returns false when the write
+     * fails with an [IOException] (the caller reports it); any other exception is a bug and
+     * propagates.
      */
     suspend fun update(transform: (NightstandSettings) -> NightstandSettings): Boolean = try {
         dataStore.edit { preferences ->
-            preferences.writeSettings(transform(preferences.toNightstandSettings()).sanitised())
+            val before = preferences.toNightstandSettings()
+            preferences.writeChangedSettings(before, transform(before).sanitised())
         }
         true
     } catch (_: IOException) {

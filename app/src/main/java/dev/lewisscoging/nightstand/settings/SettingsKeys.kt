@@ -39,19 +39,35 @@ fun Preferences.toNightstandSettings(): NightstandSettings = NightstandSettings(
     burnInShift = this[SettingsKeys.BURN_IN_SHIFT] ?: DEFAULT_BURN_IN_SHIFT
 ).sanitised()
 
-fun MutablePreferences.writeSettings(settings: NightstandSettings) {
-    this[SettingsKeys.ENABLED] = settings.enabled
-    this[SettingsKeys.START_TIME] = settings.startTime
-    this[SettingsKeys.END_TIME] = settings.endTime
-    this[SettingsKeys.CLOCK_TIMEOUT_SECONDS] = settings.clockTimeoutSeconds
-    this[SettingsKeys.REQUIRE_LANDSCAPE] = settings.requireLandscape
-    this[SettingsKeys.HOUR_FORMAT] = settings.hourFormat.name
-    this[SettingsKeys.CLOCK_FONT] = settings.clockFont.name
-    this[SettingsKeys.TEXT_COLOR] = settings.textColor.name
-    this[SettingsKeys.BACKGROUND_COLOR] = settings.backgroundColor.name
-    this[SettingsKeys.CLOCK_BRIGHTNESS] = settings.clockBrightness
-    this[SettingsKeys.SHOW_DATE] = settings.showDate
-    this[SettingsKeys.BURN_IN_SHIFT] = settings.burnInShift
+/**
+ * Writes only the fields that differ between [before] and [after], so a key the user never
+ * changed stays absent and keeps following the current default.
+ */
+fun MutablePreferences.writeChangedSettings(before: NightstandSettings, after: NightstandSettings) {
+    writeIfChanged(SettingsKeys.ENABLED, before.enabled, after.enabled)
+    writeIfChanged(SettingsKeys.START_TIME, before.startTime, after.startTime)
+    writeIfChanged(SettingsKeys.END_TIME, before.endTime, after.endTime)
+    writeIfChanged(
+        SettingsKeys.CLOCK_TIMEOUT_SECONDS,
+        before.clockTimeoutSeconds,
+        after.clockTimeoutSeconds
+    )
+    writeIfChanged(SettingsKeys.REQUIRE_LANDSCAPE, before.requireLandscape, after.requireLandscape)
+    writeIfChanged(SettingsKeys.HOUR_FORMAT, before.hourFormat.name, after.hourFormat.name)
+    writeIfChanged(SettingsKeys.CLOCK_FONT, before.clockFont.name, after.clockFont.name)
+    writeIfChanged(SettingsKeys.TEXT_COLOR, before.textColor.name, after.textColor.name)
+    writeIfChanged(
+        SettingsKeys.BACKGROUND_COLOR,
+        before.backgroundColor.name,
+        after.backgroundColor.name
+    )
+    writeIfChanged(SettingsKeys.CLOCK_BRIGHTNESS, before.clockBrightness, after.clockBrightness)
+    writeIfChanged(SettingsKeys.SHOW_DATE, before.showDate, after.showDate)
+    writeIfChanged(SettingsKeys.BURN_IN_SHIFT, before.burnInShift, after.burnInShift)
+}
+
+private fun <T> MutablePreferences.writeIfChanged(key: Preferences.Key<T>, before: T, after: T) {
+    if (before != after) this[key] = after
 }
 
 private inline fun <reified T : Enum<T>> enumByName(name: String?, default: T): T =
