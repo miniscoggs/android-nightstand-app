@@ -48,7 +48,7 @@ class SettingsViewModel(private val repository: SettingsRepository) :
         it.copy(requireLandscape = required)
     }
 
-    override fun setUse24Hour(format: HourFormat) = update { it.copy(use24Hour = format) }
+    override fun setHourFormat(format: HourFormat) = update { it.copy(hourFormat = format) }
 
     override fun setClockFont(font: ClockFont) = update { it.copy(clockFont = font) }
 

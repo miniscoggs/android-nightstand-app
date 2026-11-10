@@ -41,7 +41,7 @@ data class NightstandSettings(
     val endTime: Int = DEFAULT_END_MINUTES,
     val clockTimeoutSeconds: Int = DEFAULT_CLOCK_TIMEOUT_SECONDS,
     val requireLandscape: Boolean = DEFAULT_REQUIRE_LANDSCAPE,
-    val use24Hour: HourFormat = DEFAULT_HOUR_FORMAT,
+    val hourFormat: HourFormat = DEFAULT_HOUR_FORMAT,
     val clockFont: ClockFont = DEFAULT_CLOCK_FONT,
     val textColor: TextColor = DEFAULT_TEXT_COLOR,
     val backgroundColor: BackgroundColor = DEFAULT_BACKGROUND_COLOR,

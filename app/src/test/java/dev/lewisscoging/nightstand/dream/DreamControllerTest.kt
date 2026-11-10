@@ -83,7 +83,7 @@ class DreamControllerTest {
         runTest {
             val fixture = fixture(
                 NightstandSettings(
-                    use24Hour = hourFormat,
+                    hourFormat = hourFormat,
                     startTime = ALWAYS_ON_MINUTES,
                     endTime = ALWAYS_ON_MINUTES
                 ),

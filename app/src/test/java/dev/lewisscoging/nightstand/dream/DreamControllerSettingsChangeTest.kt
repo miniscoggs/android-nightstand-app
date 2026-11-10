@@ -212,13 +212,13 @@ class DreamControllerSettingsChangeTest {
 
     @Test
     fun hourFormatChangeShowsOnTheNextTick() = runTest {
-        val fixture = fixture(ALWAYS_ON.copy(use24Hour = HourFormat.H24))
+        val fixture = fixture(ALWAYS_ON.copy(hourFormat = HourFormat.H24))
         advanceAndSettle(THIRTEEN_OH_FIVE_MILLIS)
         fixture.tapAndSettle()
         assertEquals("13:05", fixture.timeText)
 
         advanceAndSettle(400)
-        fixture.change { it.copy(use24Hour = HourFormat.H12) }
+        fixture.change { it.copy(hourFormat = HourFormat.H12) }
         assertEquals("13:05", fixture.timeText)
         advanceAndSettle(599)
         assertEquals("13:05", fixture.timeText)
@@ -230,18 +230,18 @@ class DreamControllerSettingsChangeTest {
     @Test
     fun switchingBetweenSystemAndExplicitFormatsShowsOnTheNextTick() = runTest {
         val fixture = fixture(
-            ALWAYS_ON.copy(use24Hour = HourFormat.SYSTEM),
+            ALWAYS_ON.copy(hourFormat = HourFormat.SYSTEM),
             systemIs24Hour = false
         )
         advanceAndSettle(THIRTEEN_OH_FIVE_MILLIS)
         fixture.tapAndSettle()
         assertEquals("1:05", fixture.timeText)
 
-        fixture.change { it.copy(use24Hour = HourFormat.H24) }
+        fixture.change { it.copy(hourFormat = HourFormat.H24) }
         advanceAndSettle(1_000)
         assertEquals("13:05", fixture.timeText)
 
-        fixture.change { it.copy(use24Hour = HourFormat.SYSTEM) }
+        fixture.change { it.copy(hourFormat = HourFormat.SYSTEM) }
         advanceAndSettle(1_000)
         assertEquals("1:05", fixture.timeText)
     }
@@ -251,7 +251,7 @@ class DreamControllerSettingsChangeTest {
         val fixture = fixture()
         fixture.tapAndSettle()
         advanceAndSettle(7_000)
-        fixture.change { it.copy(use24Hour = HourFormat.H12) }
+        fixture.change { it.copy(hourFormat = HourFormat.H12) }
         advanceAndSettle(7_999)
         assertTrue(fixture.visible)
         advanceAndSettle(1)

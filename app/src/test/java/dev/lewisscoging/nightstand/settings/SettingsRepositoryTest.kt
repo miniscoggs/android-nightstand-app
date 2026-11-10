@@ -77,7 +77,7 @@ class SettingsRepositoryTest {
         assertRoundTrips(NightstandSettings(requireLandscape = false))
 
     @Test
-    fun use24HourRoundTrips() = assertRoundTrips(NightstandSettings(use24Hour = HourFormat.H24))
+    fun hourFormatRoundTrips() = assertRoundTrips(NightstandSettings(hourFormat = HourFormat.H24))
 
     @Test
     fun clockFontRoundTrips() = assertRoundTrips(NightstandSettings(clockFont = ClockFont.DIGITAL))
@@ -101,13 +101,13 @@ class SettingsRepositoryTest {
     @Test
     fun unknownEnumNamesFallBackToTheDefaults() = repositoryTest { store, repository ->
         store.edit {
-            it[SettingsKeys.USE_24_HOUR] = "H36"
+            it[SettingsKeys.HOUR_FORMAT] = "H36"
             it[SettingsKeys.CLOCK_FONT] = "COMIC"
             it[SettingsKeys.TEXT_COLOR] = "PURPLE"
             it[SettingsKeys.BACKGROUND_COLOR] = ""
         }
         val settings = repository.settings.first()
-        assertEquals(DEFAULT_HOUR_FORMAT, settings.use24Hour)
+        assertEquals(DEFAULT_HOUR_FORMAT, settings.hourFormat)
         assertEquals(DEFAULT_CLOCK_FONT, settings.clockFont)
         assertEquals(DEFAULT_TEXT_COLOR, settings.textColor)
         assertEquals(DEFAULT_BACKGROUND_COLOR, settings.backgroundColor)

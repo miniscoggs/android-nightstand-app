@@ -40,8 +40,8 @@ fun LazyListScope.appearanceSection(settings: NightstandSettings, actions: Setti
         SegmentedChoiceRow(
             title = stringResource(R.string.settings_hour_format_title),
             labels = formats.map { stringResource(it.labelRes()) },
-            selectedIndex = formats.indexOf(settings.use24Hour),
-            onSelect = { actions.setUse24Hour(formats[it]) }
+            selectedIndex = formats.indexOf(settings.hourFormat),
+            onSelect = { actions.setHourFormat(formats[it]) }
         )
     }
     item {

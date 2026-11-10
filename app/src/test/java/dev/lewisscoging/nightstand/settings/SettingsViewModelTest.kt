@@ -106,9 +106,10 @@ class SettingsViewModelTest {
         assertUpdates(NightstandSettings(requireLandscape = false)) { setRequireLandscape(false) }
 
     @Test
-    fun setUse24HourUpdatesState() = assertUpdates(NightstandSettings(use24Hour = HourFormat.H12)) {
-        setUse24Hour(HourFormat.H12)
-    }
+    fun setHourFormatUpdatesState() =
+        assertUpdates(NightstandSettings(hourFormat = HourFormat.H12)) {
+            setHourFormat(HourFormat.H12)
+        }
 
     @Test
     fun setClockFontUpdatesState() =

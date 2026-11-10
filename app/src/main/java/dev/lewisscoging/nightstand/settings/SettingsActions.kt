@@ -14,7 +14,7 @@ interface SettingsActions {
 
     fun setRequireLandscape(required: Boolean)
 
-    fun setUse24Hour(format: HourFormat)
+    fun setHourFormat(format: HourFormat)
 
     fun setClockFont(font: ClockFont)
 

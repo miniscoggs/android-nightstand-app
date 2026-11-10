@@ -155,7 +155,7 @@ class DreamController(
 
     private fun showTime(now: ZonedDateTime) {
         val currentSettings = currentSettings()
-        val use24Hour = resolveUse24Hour(currentSettings.use24Hour, systemIs24Hour())
+        val use24Hour = resolveUse24Hour(currentSettings.hourFormat, systemIs24Hour())
         val timeText = formatClock(now.toLocalTime(), use24Hour)
         val dateText = if (currentSettings.showDate) {
             formatDate(now.toLocalDate(), datePattern(), Locale.getDefault())

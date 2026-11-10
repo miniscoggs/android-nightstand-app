@@ -15,7 +15,7 @@ class NightstandSettingsTest {
         assertEquals(7 * 60, defaults.endTime)
         assertEquals(15, defaults.clockTimeoutSeconds)
         assertTrue(defaults.requireLandscape)
-        assertEquals(HourFormat.SYSTEM, defaults.use24Hour)
+        assertEquals(HourFormat.SYSTEM, defaults.hourFormat)
         assertEquals(ClockFont.SYSTEM, defaults.clockFont)
         assertEquals(TextColor.WHITE, defaults.textColor)
         assertEquals(BackgroundColor.OFF, defaults.backgroundColor)
@@ -102,7 +102,7 @@ class NightstandSettingsTest {
         val settings = NightstandSettings(
             enabled = false,
             requireLandscape = false,
-            use24Hour = HourFormat.H24,
+            hourFormat = HourFormat.H24,
             clockFont = ClockFont.DIGITAL,
             textColor = TextColor.RED,
             backgroundColor = BackgroundColor.DEEP_RED,
