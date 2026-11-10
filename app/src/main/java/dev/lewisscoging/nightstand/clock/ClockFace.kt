@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,7 +19,9 @@ import androidx.compose.ui.unit.sp
 
 const val CLOCK_FADE_DURATION_MILLIS = 300
 private val CLOCK_TEXT_SIZE = 96.sp
+private val CLOCK_MIN_TEXT_SIZE = 32.sp
 private val DATE_TEXT_SIZE = 24.sp
+private val DATE_MIN_TEXT_SIZE = 12.sp
 
 /**
  * Centred time with an optional date line in the given [style]; fades in and out and leaves
@@ -49,11 +52,25 @@ fun ClockFace(
             Text(
                 text = timeText,
                 color = textColor,
-                fontSize = CLOCK_TEXT_SIZE,
-                fontFamily = style.font.toFontFamily()
+                fontFamily = style.font.toFontFamily(),
+                maxLines = 1,
+                softWrap = false,
+                autoSize = TextAutoSize.StepBased(
+                    minFontSize = CLOCK_MIN_TEXT_SIZE,
+                    maxFontSize = CLOCK_TEXT_SIZE
+                ) // shrinks to fit at large system font sizes
             )
             if (dateText != null) {
-                Text(text = dateText, color = textColor, fontSize = DATE_TEXT_SIZE)
+                Text(
+                    text = dateText,
+                    color = textColor,
+                    maxLines = 1,
+                    softWrap = false,
+                    autoSize = TextAutoSize.StepBased(
+                        minFontSize = DATE_MIN_TEXT_SIZE,
+                        maxFontSize = DATE_TEXT_SIZE
+                    )
+                )
             }
         }
     }
