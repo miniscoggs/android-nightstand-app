@@ -10,13 +10,13 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $repoRoot
 
 $dreamComponent = 'dev.lewisscoging.nightstand/.dream.NightstandDreamService'
-$screenCentreX = 540   # half of the 1080 px portrait width from the facts table
-$screenCentreY = 1170  # half of the 2340 px portrait height from the facts table
+$screenCentreX = 540   # half of the 1080 px portrait width of the test phone
+$screenCentreY = 1170  # half of the 2340 px portrait height of the test phone
 $dreamStartWaitSeconds = 2
 $tapWaitSeconds = 1
 $deviceScreenshot = '/sdcard/ns.png'
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$runDir = Join-Path $repoRoot '.plan-runs'
+$runDir = Join-Path $repoRoot 'build\smoke'
 $localScreenshot = Join-Path $runDir "smoke-$timestamp.png"
 
 $startDreamPrimary = @('shell', 'cmd', 'dreams', 'start')
@@ -116,7 +116,7 @@ foreach ($step in $steps) {
                 $result = Invoke-Adb $startDreamFallback
                 if ($result.Output) { Write-Host $result.Output }
                 if (-not (Test-AdbSucceeded $result)) {
-                    Write-Error 'Neither dream start command worked. Record a working one in the plan facts table (Step 8.1).'
+                    Write-Error 'Neither dream start command worked. Record a working one in TESTING.md.'
                     exit 1
                 }
             }

@@ -1,10 +1,10 @@
 # Nightstand device testing
 
-The manual checklist for the Samsung Galaxy S26 Ultra (SM-S948B, serial `R3GYC0KLZ8K`, 1080x2340 portrait). It is run in Phase 8 of `NIGHTSTAND-PLAN.md`, first against the debug build and finally against the signed release (Step 8.8). Every row needs a passing Result against the release APK before v1 is done.
+The manual checklist for the Samsung Galaxy S26 Ultra (SM-S948B, serial `<device serial>`, 1080x2340 portrait). It is run first against the debug build and finally against the signed release. Every row needs a passing Result against the release APK before v1 is done.
 
 Items marked **[hands-on]** need the phone physically handled (moved, unlocked, looked at in a dark room). Everything else can be driven over adb with the phone plugged in over USB, which also keeps it charging.
 
-Until Step 8.1 records the real wording, the One UI menu path is the provisional "Settings > Display > Screen saver" and the start option is the provisional "While charging". Update both here when the facts table in the plan is filled in.
+Until the real wording is confirmed on the phone, the One UI menu path is the provisional "Settings > Display > Screen saver" and the start option is the provisional "While charging". Update both here once confirmed.
 
 ## Build and install
 
@@ -15,7 +15,7 @@ Until Step 8.1 records the real wording, the One UI menu path is the provisional
 adb shell am start -n dev.lewisscoging.nightstand/.MainActivity
 ```
 
-### Signed release build (Step 8.7)
+### Signed release build
 
 1. The owner creates a keystore outside the repo with the JDK's `keytool` and writes the gitignored `keystore.properties` at the repo root (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`). Without that file `assembleRelease` produces an unsigned APK.
 2. Build and check the signature:
@@ -34,13 +34,13 @@ adb shell am start -n dev.lewisscoging.nightstand/.MainActivity
 
 ### Smoke script
 
-`.\scripts\device-smoke.ps1` installs the debug build, selects and enables the dream through `adb shell settings put secure ...`, starts the dream, taps the screen centre, saves a screenshot to `.plan-runs\smoke-<timestamp>.png` and exits the dream with the power key. `.\scripts\device-smoke.ps1 -WhatIf` prints the commands without touching adb.
+`.\scripts\device-smoke.ps1` installs the debug build, selects and enables the dream through `adb shell settings put secure ...`, starts the dream, taps the screen centre, saves a screenshot to `build\smoke\smoke-<timestamp>.png` and exits the dream with the power key. `.\scripts\device-smoke.ps1 -WhatIf` prints the commands without touching adb.
 
 ### Useful adb commands
 
 | Purpose | Command |
 |---|---|
-| Start the dream now | `adb shell cmd dreams start` (fallback `adb shell am start -n com.android.systemui/.Somnambulator`; Step 8.1 records which works) |
+| Start the dream now | `adb shell cmd dreams start` (fallback `adb shell am start -n com.android.systemui/.Somnambulator`; note here which one works) |
 | Tap the screen centre | `adb shell input tap 540 1170` |
 | Exit the dream | `adb shell input keyevent KEYCODE_POWER` |
 | Screenshot | `adb shell screencap -p /sdcard/ns.png` then `adb pull /sdcard/ns.png <local path>` (don't redirect `adb exec-out` in PowerShell 5.1) |
@@ -121,7 +121,7 @@ Change each setting in the app, start the dream over adb, tap, and confirm by sc
 | 6.7 | Select each text colour: White, Warm white, Red, Amber, Green, Cyan. | Each shows in the dream and is legible on true black. | | | |
 | 6.8 | Select each background: True black, Dark grey, Midnight blue, Deep red. | Each shows in the dream; the clock stays legible on each. | | | |
 | 6.9 | Set clock brightness to 5%, then 100%. | 5% is dim but readable; 100% is full colour. Non-black backgrounds dim with it. | | | |
-| 6.10 | **[hands-on]** In a dark room, view the clock at 5% brightness. | Legible without being glaring. Record the decision for D2 in the plan. | | | |
+| 6.10 | **[hands-on]** In a dark room, view the clock at 5% brightness. | Legible without being glaring. Record the result in Notes. | | | |
 | 6.11 | Turn "Show date" on, then off. | A small date line appears under the clock, then disappears. | | | |
 | 6.12 | Change several settings while the dream is running (for example colour and timeout). | The dream picks up the change live without restarting. | | | |
 | 6.13 | Change every setting away from its default, force-stop the app (`adb shell am force-stop dev.lewisscoging.nightstand`) and relaunch it. | Every value persisted. | | | |
