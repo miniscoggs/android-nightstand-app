@@ -80,6 +80,7 @@ Defaults: 15 s timeout, inside the window, phone on its stand.
 | 3.3 | Tap, wait about 10 s, tap again while the clock is Visible. | The timer restarts: the clock hides 15 s after the second tap, not the first. | | | |
 | 3.4 | Send 20 rapid taps (`adb shell input tap 540 1170` in a loop). | The clock shows and hides once, one timeout after the last tap; logcat shows no duplicate tickers, errors or crashes. | | | |
 | 3.5 | Start and stop the dream 3 times, then check `adb logcat -d *:W` for the app's PID. | No crash, no "ViewTreeLifecycleOwner not found", no app warnings or errors. | | | |
+| 3.6 | **[hands-on]** Turn auto-rotate off, put the phone on its stand resting on a long edge, and tap. | The clock reads upright along the long edge, not sideways. | | | |
 
 ### Exits
 
@@ -105,6 +106,8 @@ Taps must be ignored whenever a gate is closed, and a Visible clock must hide im
 | 5.9 | **[hands-on]** Put the phone back on the stand; wait about 2 s; tap. | Taps work again. | | | |
 | 5.10 | Turn "Require landscape" off; hold the phone in portrait (**[hands-on]**); tap. | The clock shows. Turn it back on afterwards. | | | |
 | 5.11 | Exit the dream, then run `adb shell dumpsys sensorservice`. | No active sensor registration for `dev.lewisscoging.nightstand`. | | | |
+| 5.12 | Set a time window that excludes now, start the dream and leave it running, then run `adb shell dumpsys sensorservice`. | No active sensor registration for `dev.lewisscoging.nightstand` while the dream runs outside the window. Restore the window afterwards. | | | |
+| 5.13 | **[hands-on]** With "Require landscape" off, start the dream and hold the phone in portrait; switch "Require landscape" on while the dream runs, tap, then put the phone on its stand on a long edge and tap again after about a second. | Taps are ignored after the switch until the phone has rested on a long edge for about a second; then they show the clock. | | | |
 
 ### Settings
 
@@ -125,6 +128,10 @@ Change each setting in the app, start the dream over adb, tap, and confirm by sc
 | 6.11 | Turn "Show date" on, then off. | A small date line appears under the clock, then disappears. | | | |
 | 6.12 | Change several settings while the dream is running (for example colour and timeout). | The dream picks up the change live without restarting. | | | |
 | 6.13 | Change every setting away from its default, force-stop the app (`adb shell am force-stop dev.lewisscoging.nightstand`) and relaunch it. | Every value persisted. | | | |
+| 6.14 | Set the system font size to its largest. With each clock font and "Show date" on, view the clock in landscape, then with "Require landscape" off in portrait (**[hands-on]**). | The time and the date each stay on one line and inside the screen. Restore the font size afterwards. | | | |
+| 6.15 | With "Show date" on, set the system language to Korean, then Arabic, then German; start the dream and tap after each change. | The date shows in each language and the dream does not crash. Restore the language afterwards. | | | |
+| 6.16 | Set `cmd uimode night yes`, force-stop the app, then open it from the launcher. | No white flash before the settings screen draws. | | | |
+| 6.17 | Change several switches away from their defaults, force-stop the app, then open it. | The controls appear with their stored values; none visibly flips from its default on open. | | | |
 
 ### Burn-in
 
