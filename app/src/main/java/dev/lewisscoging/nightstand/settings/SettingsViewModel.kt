@@ -16,11 +16,7 @@ import kotlinx.coroutines.launch
 
 private const val SUBSCRIPTION_TIMEOUT_MS = 5_000L
 
-// One setter per persisted field is the screen's contract, so the function count grows with the model.
-@Suppress("TooManyFunctions")
-class SettingsViewModel(private val repository: SettingsRepository) :
-    ViewModel(),
-    SettingsActions {
+class SettingsViewModel(private val repository: SettingsRepository) : ViewModel() {
     /** Null until storage is first read, so the screen never shows stand-in defaults. */
     val settings: StateFlow<NightstandSettings?> = repository.settings.stateIn(
         scope = viewModelScope,
@@ -34,39 +30,8 @@ class SettingsViewModel(private val repository: SettingsRepository) :
     /** Emits once per settings write that failed; each emission goes to one collector. */
     val saveFailures: Flow<Unit> = saveFailureEvents.receiveAsFlow()
 
-    override fun setEnabled(enabled: Boolean) = update { it.copy(enabled = enabled) }
-
-    override fun setStartTime(minutesOfDay: Int) = update { it.copy(startTime = minutesOfDay) }
-
-    override fun setEndTime(minutesOfDay: Int) = update { it.copy(endTime = minutesOfDay) }
-
-    override fun setClockTimeoutSeconds(seconds: Int) = update {
-        it.copy(clockTimeoutSeconds = seconds)
-    }
-
-    override fun setRequireLandscape(required: Boolean) = update {
-        it.copy(requireLandscape = required)
-    }
-
-    override fun setHourFormat(format: HourFormat) = update { it.copy(hourFormat = format) }
-
-    override fun setClockFont(font: ClockFont) = update { it.copy(clockFont = font) }
-
-    override fun setTextColor(color: TextColor) = update { it.copy(textColor = color) }
-
-    override fun setBackgroundColor(color: BackgroundColor) = update {
-        it.copy(backgroundColor = color)
-    }
-
-    override fun setClockBrightness(brightness: Float) = update {
-        it.copy(clockBrightness = brightness)
-    }
-
-    override fun setShowDate(show: Boolean) = update { it.copy(showDate = show) }
-
-    override fun setBurnInShift(shift: Boolean) = update { it.copy(burnInShift = shift) }
-
-    private fun update(transform: (NightstandSettings) -> NightstandSettings) {
+    /** Persists [transform] applied to the stored settings; a failed write is reported on [saveFailures]. */
+    fun update(transform: (NightstandSettings) -> NightstandSettings) {
         viewModelScope.launch {
             if (!repository.update(transform)) saveFailureEvents.send(Unit)
         }

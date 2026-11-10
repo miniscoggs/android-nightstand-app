@@ -27,14 +27,14 @@ const val CLOCK_TIMEOUT_SLIDER_STEPS =
 private val clockTimeoutSliderRange =
     MIN_CLOCK_TIMEOUT_SECONDS.toFloat()..MAX_CLOCK_TIMEOUT_SECONDS.toFloat()
 
-fun LazyListScope.behaviourSection(settings: NightstandSettings, actions: SettingsActions) {
+fun LazyListScope.behaviourSection(settings: NightstandSettings, onUpdate: SettingsUpdate) {
     item { SectionHeader(title = stringResource(R.string.settings_behaviour_header)) }
     item {
         TimeRow(
             title = stringResource(R.string.settings_start_time_title),
             minutesOfDay = settings.startTime,
             is24Hour = systemIs24Hour(),
-            onTimeChange = actions::setStartTime
+            onTimeChange = { minutes -> onUpdate { it.copy(startTime = minutes) } }
         )
     }
     item {
@@ -42,13 +42,13 @@ fun LazyListScope.behaviourSection(settings: NightstandSettings, actions: Settin
             title = stringResource(R.string.settings_end_time_title),
             minutesOfDay = settings.endTime,
             is24Hour = systemIs24Hour(),
-            onTimeChange = actions::setEndTime
+            onTimeChange = { minutes -> onUpdate { it.copy(endTime = minutes) } }
         )
     }
     item {
         ClockTimeoutRow(
             seconds = settings.clockTimeoutSeconds,
-            onSecondsChange = actions::setClockTimeoutSeconds
+            onSecondsChange = { seconds -> onUpdate { it.copy(clockTimeoutSeconds = seconds) } }
         )
     }
     item {
@@ -56,7 +56,7 @@ fun LazyListScope.behaviourSection(settings: NightstandSettings, actions: Settin
             title = stringResource(R.string.settings_require_landscape_title),
             summary = stringResource(R.string.settings_require_landscape_summary),
             checked = settings.requireLandscape,
-            onCheckedChange = actions::setRequireLandscape
+            onCheckedChange = { checked -> onUpdate { it.copy(requireLandscape = checked) } }
         )
     }
 }

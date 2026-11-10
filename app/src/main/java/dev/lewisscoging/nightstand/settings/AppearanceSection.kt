@@ -33,7 +33,7 @@ val CLOCK_BRIGHTNESS_SLIDER_STEPS =
 /** A brightness factor as a whole percentage, eg 0.2 -> 20. */
 fun brightnessPercent(brightness: Float): Int = (brightness * PERCENT).roundToInt()
 
-fun LazyListScope.appearanceSection(settings: NightstandSettings, actions: SettingsActions) {
+fun LazyListScope.appearanceSection(settings: NightstandSettings, onUpdate: SettingsUpdate) {
     item { SectionHeader(title = stringResource(R.string.settings_appearance_header)) }
     item {
         val formats = HourFormat.entries
@@ -41,7 +41,7 @@ fun LazyListScope.appearanceSection(settings: NightstandSettings, actions: Setti
             title = stringResource(R.string.settings_hour_format_title),
             labels = formats.map { stringResource(it.labelRes()) },
             selectedIndex = formats.indexOf(settings.hourFormat),
-            onSelect = { actions.setHourFormat(formats[it]) }
+            onSelect = { index -> onUpdate { it.copy(hourFormat = formats[index]) } }
         )
     }
     item {
@@ -50,14 +50,16 @@ fun LazyListScope.appearanceSection(settings: NightstandSettings, actions: Setti
             title = stringResource(R.string.settings_clock_font_title),
             choices = fonts.map { FontChoice(it.toFontFamily(), stringResource(it.labelRes())) },
             selectedIndex = fonts.indexOf(settings.clockFont),
-            onSelect = { actions.setClockFont(fonts[it]) }
+            onSelect = { index -> onUpdate { it.copy(clockFont = fonts[index]) } }
         )
     }
-    colourItems(settings = settings, actions = actions)
+    colourItems(settings = settings, onUpdate = onUpdate)
     item {
         ClockBrightnessRow(
             brightness = settings.clockBrightness,
-            onBrightnessChange = actions::setClockBrightness
+            onBrightnessChange = { brightness ->
+                onUpdate { it.copy(clockBrightness = brightness) }
+            }
         )
     }
     item {
@@ -65,7 +67,7 @@ fun LazyListScope.appearanceSection(settings: NightstandSettings, actions: Setti
             title = stringResource(R.string.settings_show_date_title),
             summary = stringResource(R.string.settings_show_date_summary),
             checked = settings.showDate,
-            onCheckedChange = actions::setShowDate
+            onCheckedChange = { checked -> onUpdate { it.copy(showDate = checked) } }
         )
     }
     item {
@@ -73,19 +75,19 @@ fun LazyListScope.appearanceSection(settings: NightstandSettings, actions: Setti
             title = stringResource(R.string.settings_burn_in_shift_title),
             summary = stringResource(R.string.settings_burn_in_shift_summary),
             checked = settings.burnInShift,
-            onCheckedChange = actions::setBurnInShift
+            onCheckedChange = { checked -> onUpdate { it.copy(burnInShift = checked) } }
         )
     }
 }
 
-private fun LazyListScope.colourItems(settings: NightstandSettings, actions: SettingsActions) {
+private fun LazyListScope.colourItems(settings: NightstandSettings, onUpdate: SettingsUpdate) {
     item {
         val colors = TextColor.entries
         SwatchRow(
             title = stringResource(R.string.settings_text_color_title),
             swatches = colors.map { Swatch(Color(it.argb()), stringResource(it.labelRes())) },
             selectedIndex = colors.indexOf(settings.textColor),
-            onSelect = { actions.setTextColor(colors[it]) }
+            onSelect = { index -> onUpdate { it.copy(textColor = colors[index]) } }
         )
     }
     item {
@@ -94,7 +96,7 @@ private fun LazyListScope.colourItems(settings: NightstandSettings, actions: Set
             title = stringResource(R.string.settings_background_color_title),
             swatches = colors.map { Swatch(Color(it.argb()), stringResource(it.labelRes())) },
             selectedIndex = colors.indexOf(settings.backgroundColor),
-            onSelect = { actions.setBackgroundColor(colors[it]) }
+            onSelect = { index -> onUpdate { it.copy(backgroundColor = colors[index]) } }
         )
     }
 }

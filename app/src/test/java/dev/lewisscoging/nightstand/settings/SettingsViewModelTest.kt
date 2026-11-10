@@ -64,12 +64,6 @@ class SettingsViewModelTest {
         block(viewModel)
     }
 
-    private fun assertUpdates(expected: NightstandSettings, action: SettingsViewModel.() -> Unit) =
-        viewModelTest { viewModel ->
-            viewModel.action()
-            assertEquals(expected, viewModel.settings.first { it == expected })
-        }
-
     @Test
     fun firstLoadedStateIsTheDefaults() = viewModelTest { viewModel ->
         assertEquals(NightstandSettings(), viewModel.settings.filterNotNull().first())
@@ -86,68 +80,39 @@ class SettingsViewModelTest {
     }
 
     @Test
-    fun setEnabledUpdatesState() =
-        assertUpdates(NightstandSettings(enabled = false)) { setEnabled(false) }
+    fun updateAppliesTheTransformToTheStoredValue() = runTest {
+        val repository = newRepository()
+        repository.update { it.copy(showDate = true, clockTimeoutSeconds = 30) }
+        val viewModel = SettingsViewModel(repository)
+        backgroundScope.launch { viewModel.settings.collect {} }
+        viewModel.update { it.copy(clockTimeoutSeconds = it.clockTimeoutSeconds + 15) }
+        val expected = NightstandSettings(showDate = true, clockTimeoutSeconds = 45)
+        assertEquals(expected, viewModel.settings.first { it == expected })
+        assertEquals(expected, repository.settings.first())
+    }
 
     @Test
-    fun setStartTimeUpdatesState() =
-        assertUpdates(NightstandSettings(startTime = 21 * 60)) { setStartTime(21 * 60) }
-
-    @Test
-    fun setEndTimeUpdatesState() =
-        assertUpdates(NightstandSettings(endTime = 6 * 60 + 30)) { setEndTime(6 * 60 + 30) }
-
-    @Test
-    fun setClockTimeoutSecondsUpdatesState() =
-        assertUpdates(NightstandSettings(clockTimeoutSeconds = 45)) { setClockTimeoutSeconds(45) }
-
-    @Test
-    fun setRequireLandscapeUpdatesState() =
-        assertUpdates(NightstandSettings(requireLandscape = false)) { setRequireLandscape(false) }
-
-    @Test
-    fun setHourFormatUpdatesState() =
-        assertUpdates(NightstandSettings(hourFormat = HourFormat.H12)) {
-            setHourFormat(HourFormat.H12)
+    fun updateSanitisesOutOfRangeResults() = viewModelTest { viewModel ->
+        viewModel.update {
+            it.copy(
+                clockTimeoutSeconds = MAX_CLOCK_TIMEOUT_SECONDS + 1,
+                clockBrightness = MIN_CLOCK_BRIGHTNESS / 2
+            )
         }
-
-    @Test
-    fun setClockFontUpdatesState() =
-        assertUpdates(NightstandSettings(clockFont = ClockFont.BUBBLE)) {
-            setClockFont(ClockFont.BUBBLE)
-        }
-
-    @Test
-    fun setTextColorUpdatesState() =
-        assertUpdates(NightstandSettings(textColor = TextColor.AMBER)) {
-            setTextColor(TextColor.AMBER)
-        }
-
-    @Test
-    fun setBackgroundColorUpdatesState() =
-        assertUpdates(NightstandSettings(backgroundColor = BackgroundColor.MIDNIGHT_BLUE)) {
-            setBackgroundColor(BackgroundColor.MIDNIGHT_BLUE)
-        }
-
-    @Test
-    fun setClockBrightnessUpdatesState() =
-        assertUpdates(NightstandSettings(clockBrightness = 0.6f)) { setClockBrightness(0.6f) }
-
-    @Test
-    fun setShowDateUpdatesState() =
-        assertUpdates(NightstandSettings(showDate = true)) { setShowDate(true) }
-
-    @Test
-    fun setBurnInShiftUpdatesState() =
-        assertUpdates(NightstandSettings(burnInShift = false)) { setBurnInShift(false) }
+        val expected = NightstandSettings(
+            clockTimeoutSeconds = MAX_CLOCK_TIMEOUT_SECONDS,
+            clockBrightness = MIN_CLOCK_BRIGHTNESS
+        )
+        assertEquals(expected, viewModel.settings.first { it == expected })
+    }
 
     @Test
     fun eachFailedWriteEmitsOneSaveFailure() = runTest {
         val viewModel =
             SettingsViewModel(SettingsRepository(ThrowingDataStore(IOException("full"))))
         val failures = collectSaveFailures(viewModel)
-        viewModel.setShowDate(true)
-        viewModel.setBurnInShift(false)
+        viewModel.update { it.copy(showDate = true) }
+        viewModel.update { it.copy(burnInShift = false) }
         advanceUntilIdle()
         assertEquals(2, failures.size)
     }
@@ -156,7 +121,7 @@ class SettingsViewModelTest {
     fun successfulWriteEmitsNoSaveFailure() = viewModelTest { viewModel ->
         val failures = collectSaveFailures(viewModel)
         val expected = NightstandSettings(showDate = true)
-        viewModel.setShowDate(true)
+        viewModel.update { it.copy(showDate = true) }
         viewModel.settings.first { it == expected }
         advanceUntilIdle()
         assertEquals(0, failures.size)

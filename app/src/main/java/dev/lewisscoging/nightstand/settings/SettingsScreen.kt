@@ -19,13 +19,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.lewisscoging.nightstand.R
 import dev.lewisscoging.nightstand.settings.components.SwitchRow
 
+/** Applies a change to the settings, eg `onUpdate { it.copy(showDate = true) }`. */
+typealias SettingsUpdate = (transform: (NightstandSettings) -> NightstandSettings) -> Unit
+
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
-    val actions: SettingsActions = viewModel
     val snackbarHostState = remember { SnackbarHostState() }
     val saveFailedMessage = stringResource(R.string.settings_save_failed)
     LaunchedEffect(viewModel, saveFailedMessage) {
@@ -33,7 +35,7 @@ fun SettingsScreen(
     }
     SettingsContent(
         settings = settings,
-        actions = actions,
+        onUpdate = viewModel::update,
         snackbarHostState = snackbarHostState,
         modifier = modifier
     )
@@ -43,7 +45,7 @@ fun SettingsScreen(
 @Composable
 private fun SettingsContent(
     settings: NightstandSettings?,
-    actions: SettingsActions,
+    onUpdate: SettingsUpdate,
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
 ) {
@@ -61,11 +63,11 @@ private fun SettingsContent(
                     title = stringResource(R.string.settings_enabled_title),
                     summary = stringResource(R.string.settings_enabled_summary),
                     checked = settings.enabled,
-                    onCheckedChange = actions::setEnabled
+                    onCheckedChange = { checked -> onUpdate { it.copy(enabled = checked) } }
                 )
             }
-            behaviourSection(settings = settings, actions = actions)
-            appearanceSection(settings = settings, actions = actions)
+            behaviourSection(settings = settings, onUpdate = onUpdate)
+            appearanceSection(settings = settings, onUpdate = onUpdate)
         }
     }
 }
