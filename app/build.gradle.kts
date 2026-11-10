@@ -15,6 +15,22 @@ val keystoreProperties =
         }
     }
 
+// A half-filled file would otherwise surface later as an obscure signing error, so name the gaps up front.
+val requiredKeystoreKeys = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+if (keystorePropertiesFile.exists()) {
+    val missingKeys = requiredKeystoreKeys.filter {
+        keystoreProperties.getProperty(it).isNullOrBlank()
+    }
+    if (missingKeys.isNotEmpty()) {
+        throw GradleException(
+            "${keystorePropertiesFile.path} is missing ${missingKeys.joinToString(", ")}; " +
+                "add them or delete the file to build the release APK unsigned."
+        )
+    }
+}
+
+fun keystoreProperty(key: String): String = keystoreProperties.getProperty(key)
+
 android {
     namespace = "dev.lewisscoging.nightstand"
     compileSdk {
@@ -33,10 +49,10 @@ android {
     signingConfigs {
         if (keystorePropertiesFile.exists()) {
             create("release") {
-                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = rootProject.file(keystoreProperty("storeFile"))
+                storePassword = keystoreProperty("storePassword")
+                keyAlias = keystoreProperty("keyAlias")
+                keyPassword = keystoreProperty("keyPassword")
             }
         }
     }
