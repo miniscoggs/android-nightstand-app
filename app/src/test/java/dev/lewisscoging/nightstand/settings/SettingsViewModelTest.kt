@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.PreferencesSerializer
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -18,6 +19,7 @@ import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -47,14 +49,17 @@ class SettingsViewModelTest {
         return failures
     }
 
-    private fun viewModelTest(block: suspend TestScope.(SettingsViewModel) -> Unit) = runTest {
-        val store = PreferenceDataStoreFactory.create(
+    private fun TestScope.newRepository() = SettingsRepository(
+        PreferenceDataStoreFactory.create(
             storage = OkioStorage(FileSystem.SYSTEM, PreferencesSerializer) {
                 tempFolder.root.resolve("test.preferences_pb").toOkioPath()
             },
             scope = backgroundScope
         )
-        val viewModel = SettingsViewModel(SettingsRepository(store))
+    )
+
+    private fun viewModelTest(block: suspend TestScope.(SettingsViewModel) -> Unit) = runTest {
+        val viewModel = SettingsViewModel(newRepository())
         backgroundScope.launch { viewModel.settings.collect {} }
         block(viewModel)
     }
@@ -66,8 +71,18 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun initialStateIsTheDefaults() = viewModelTest { viewModel ->
-        assertEquals(NightstandSettings(), viewModel.settings.value)
+    fun firstLoadedStateIsTheDefaults() = viewModelTest { viewModel ->
+        assertEquals(NightstandSettings(), viewModel.settings.filterNotNull().first())
+    }
+
+    @Test
+    fun initialStateIsNullAndTheStoredValueFollows() = runTest {
+        val repository = newRepository()
+        val stored = NightstandSettings(showDate = true)
+        repository.update { stored }
+        val viewModel = SettingsViewModel(repository)
+        assertNull(viewModel.settings.value)
+        assertEquals(stored, viewModel.settings.filterNotNull().first())
     }
 
     @Test

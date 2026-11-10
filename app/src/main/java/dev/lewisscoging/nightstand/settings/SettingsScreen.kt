@@ -42,7 +42,7 @@ fun SettingsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsContent(
-    settings: NightstandSettings,
+    settings: NightstandSettings?,
     actions: SettingsActions,
     snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier
@@ -52,6 +52,8 @@ private fun SettingsContent(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.app_name)) }) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
+        // The body stays empty until storage is read, so controls never flip from the defaults.
+        if (settings == null) return@Scaffold
         LazyColumn(contentPadding = innerPadding) {
             item { SetupCard() }
             item {

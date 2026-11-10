@@ -21,10 +21,11 @@ private const val SUBSCRIPTION_TIMEOUT_MS = 5_000L
 class SettingsViewModel(private val repository: SettingsRepository) :
     ViewModel(),
     SettingsActions {
-    val settings: StateFlow<NightstandSettings> = repository.settings.stateIn(
+    /** Null until storage is first read, so the screen never shows stand-in defaults. */
+    val settings: StateFlow<NightstandSettings?> = repository.settings.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(SUBSCRIPTION_TIMEOUT_MS),
-        initialValue = NightstandSettings()
+        initialValue = null
     )
 
     // Buffered so a failure is still shown if it happens while the screen is not collecting.
